@@ -5,7 +5,7 @@ An AI-driven platform that analyzes resumes, identifies skill gaps, and recommen
 ## 🚀 Built With
 
 - **Frontend:** Next.js, React, Tailwind CSS, Lucide Icons, Framer Motion.
-- **Backend:** FastAPI (Python), Google Gemini API (gemini-3-flash-preview), Apify (LinkedIn/Naukri Scrapers).
+- **Backend:** FastAPI (Python), Google Gemini API (gemini-3-flash-preview), Apify (LinkedIn Scrapers).
 - **Core Features:** PDF Resume Analysis, Career Roadmap Generation, Automated Job Fetching.
 
 ## 🛠️ Getting Started
