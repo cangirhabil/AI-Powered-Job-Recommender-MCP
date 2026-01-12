@@ -7,6 +7,7 @@ import { useResumeAnalysis } from "@/hooks/useResumeAnalysis";
 import { HeroSection } from "@/components/home/HeroSection";
 import { UploadZone } from "@/components/home/UploadZone";
 import { AnalysisDashboard } from "@/components/home/AnalysisDashboard";
+import { AnalysisProgress } from "@/components/home/AnalysisProgress";
 
 export default function Home() {
   const {
@@ -15,12 +16,13 @@ export default function Home() {
     fetchingJobs,
     analysis,
     jobs,
+    progress,
     handleFileChange,
     handleUpload,
     handleGetJobs,
   } = useResumeAnalysis();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null!);
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
@@ -41,8 +43,16 @@ export default function Home() {
         triggerFileInput={triggerFileInput}
       />
 
-      <AnimatePresence>
-        {analysis && (
+      <AnimatePresence mode="wait">
+        {analyzing && (
+          <AnalysisProgress
+            currentStep={progress.currentStep}
+            completedSteps={progress.completedSteps}
+            isProcessing={progress.isProcessing}
+          />
+        )}
+        
+        {!analyzing && analysis && (
           <AnalysisDashboard
             analysis={analysis}
             jobs={jobs}
@@ -54,4 +64,3 @@ export default function Home() {
     </div>
   );
 }
-

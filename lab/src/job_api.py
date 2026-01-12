@@ -6,7 +6,7 @@ load_dotenv()
 apify_client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
 
 # Fetch LinkedIn jobs based on search query and location
-def fetch_linkedin_jobs(search_query, location = "Türkiye", rows=60):
+def fetch_linkedin_jobs(search_query, location = "Türkiye", rows=10):
     token = os.getenv("APIFY_API_TOKEN")
     if not token:
         return []

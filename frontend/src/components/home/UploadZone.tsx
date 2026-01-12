@@ -9,7 +9,7 @@ interface UploadZoneProps {
   analyzing: boolean;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUpload: () => void;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  fileInputRef: React.RefObject<HTMLInputElement>;
   triggerFileInput: () => void;
 }
 

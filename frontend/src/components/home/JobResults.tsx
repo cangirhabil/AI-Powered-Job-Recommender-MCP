@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +12,24 @@ interface JobResultsProps {
 }
 
 export function JobResults({ jobs }: JobResultsProps) {
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to job results when they appear
+  useEffect(() => {
+    if (resultsRef.current && jobs.linkedin.length > 0) {
+      resultsRef.current.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "start" 
+      });
+    }
+  }, [jobs]);
+
   return (
     <motion.div 
+      ref={resultsRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-8"
+      className="space-y-8 scroll-mt-8"
     >
        <div className="flex items-center justify-between">
           <h3 className="text-3xl font-bold flex items-center gap-3">
