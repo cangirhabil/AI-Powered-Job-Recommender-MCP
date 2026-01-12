@@ -119,4 +119,96 @@ def fetch_linkedin_jobs(search_query, location="Türkiye", rows=10):
         traceback.print_exc()
         return []
 
+def analyze_summary(resume_text):
+    """Analyzes resume and returns an executive summary."""
+    prompt = f"""Analyze this resume and provide a comprehensive executive summary. Include:
+1. Professional Profile (role, experience level, specializations)
+2. Education (institution, degree, GPA if available)
+3. Key Technical Skills
+4. Notable Projects and Achievements
+5. Work Experience highlights
 
+Be thorough and complete. Do not cut off mid-sentence.
+
+Resume:
+{resume_text}"""
+    return ask_gemini(prompt, max_tokens=2000)
+
+def analyze_gaps(resume_text):
+    """Analyzes resume and identifies gaps."""
+    prompt = f"""Analyze this resume and identify gaps that could be improved for better job opportunities. Include:
+1. Missing technical skills for the target role
+2. Certifications that would strengthen the profile
+3. Experience gaps (leadership, team size, project scale)
+4. Soft skills that could be highlighted
+5. Portfolio/GitHub/online presence improvements
+
+Provide actionable recommendations. Be thorough and complete.
+
+Resume:
+{resume_text}"""
+    return ask_gemini(prompt, max_tokens=1500)
+
+def analyze_roadmap(resume_text):
+    """Creates a career roadmap based on resume."""
+    prompt = f"""Based on this resume, create a strategic career roadmap for the next 1-2 years. Include:
+1. Short-term goals (0-6 months): Skills to learn immediately
+2. Medium-term goals (6-12 months): Certifications and projects
+3. Long-term goals (1-2 years): Career positioning and industry exposure
+4. Recommended learning resources and platforms
+5. Networking and community engagement suggestions
+
+Be specific and actionable. Complete all sections.
+
+Resume:
+{resume_text}"""
+    return ask_gemini(prompt, max_tokens=1500)
+
+def analyze_keywords(resume_text, summary_text=None):
+    """Suggests job search keywords based on resume."""
+    if not summary_text:
+        # If no summary provided, use first 2000 chars of resume as context
+        summary_text = resume_text[:2000]
+
+    prompt = f"""Based on this resume, suggest the best job search keywords.
+
+CRITICAL: Return ONLY a valid JSON array of strings. No explanation, no markdown, just the JSON array.
+Example format: ["Software Engineer", "Full Stack Developer", "Python Developer", "Machine Learning", "React"]
+
+IMPORTANT: 
+- The FIRST 3-5 items MUST be actual job titles (e.g., "Software Engineer", "Backend Developer")
+- Job titles should be searchable on LinkedIn
+- After job titles, you can include key technologies
+- Avoid overly specific technical jargon that wouldn't be used in job titles
+- Maximum 10-12 keywords total
+
+Resume Summary:
+{summary_text}"""
+    
+    keywords_raw = ask_gemini(prompt, max_tokens=1000)
+    
+    import json
+    # Parse JSON keywords
+    try:
+        # Try to extract JSON array from response
+        keywords_raw = keywords_raw.strip()
+        # Remove markdown code blocks if present
+        if keywords_raw.startswith("```"):
+            keywords_raw = keywords_raw.split("```")[1]
+            if keywords_raw.startswith("json"):
+                keywords_raw = keywords_raw[4:]
+        keywords_raw = keywords_raw.strip()
+        
+        keywords = json.loads(keywords_raw)
+        if not isinstance(keywords, list):
+            keywords = [str(keywords)]
+    except json.JSONDecodeError:
+        # Fallback: split by comma or newline
+        if "," in keywords_raw:
+            keywords = [k.strip().strip('"').strip("'") for k in keywords_raw.split(",") if k.strip()]
+        else:
+            keywords = [k.strip().strip('"').strip("'") for k in keywords_raw.split("\n") if k.strip()]
+            
+    # Clean up keywords
+    keywords = [k for k in keywords if k and len(k) > 2 and not k.startswith("[")]
+    return keywords

@@ -5,3 +5,5 @@ pymupdf
 apify-client
 python-dotenv
 python-multipart
+mcp
+fastmcp

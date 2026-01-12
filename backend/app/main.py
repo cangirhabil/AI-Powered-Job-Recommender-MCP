@@ -6,11 +6,20 @@ import json
 from .services import (
     extract_text_from_pdf, 
     ask_gemini, 
-    fetch_linkedin_jobs
+    fetch_linkedin_jobs,
+    analyze_summary,
+    analyze_gaps,
+    analyze_roadmap,
+    analyze_keywords
 )
+from .mcp_server import mcp
 import pydantic
 
 app = FastAPI(title="AI Job Recommender API")
+
+# Mount MCP Server
+# This exposes the MCP server at /mcp/sse and /mcp/messages
+app.mount("/mcp", mcp.sse_app())
 
 # Enable CORS
 app.add_middleware(
@@ -44,104 +53,25 @@ async def analyze_resume_stream(file: UploadFile = File(...)):
         
         # Step 1: Summary
         yield f"data: {json.dumps({'step': 'summary', 'status': 'processing'})}\n\n"
-        summary = ask_gemini(
-            f"""Analyze this resume and provide a comprehensive executive summary. Include:
-1. Professional Profile (role, experience level, specializations)
-2. Education (institution, degree, GPA if available)
-3. Key Technical Skills
-4. Notable Projects and Achievements
-5. Work Experience highlights
-
-Be thorough and complete. Do not cut off mid-sentence.
-
-Resume:
-{resume_text}""", 
-            max_tokens=2000
-        )
+        summary = analyze_summary(resume_text)
         results['summary'] = summary
         yield f"data: {json.dumps({'step': 'summary', 'status': 'complete', 'data': summary})}\n\n"
         
         # Step 2: Gaps
         yield f"data: {json.dumps({'step': 'gaps', 'status': 'processing'})}\n\n"
-        gaps = ask_gemini(
-            f"""Analyze this resume and identify gaps that could be improved for better job opportunities. Include:
-1. Missing technical skills for the target role
-2. Certifications that would strengthen the profile
-3. Experience gaps (leadership, team size, project scale)
-4. Soft skills that could be highlighted
-5. Portfolio/GitHub/online presence improvements
-
-Provide actionable recommendations. Be thorough and complete.
-
-Resume:
-{resume_text}""", 
-            max_tokens=1500
-        )
+        gaps = analyze_gaps(resume_text)
         results['gaps'] = gaps
         yield f"data: {json.dumps({'step': 'gaps', 'status': 'complete', 'data': gaps})}\n\n"
         
         # Step 3: Roadmap  
         yield f"data: {json.dumps({'step': 'roadmap', 'status': 'processing'})}\n\n"
-        roadmap = ask_gemini(
-            f"""Based on this resume, create a strategic career roadmap for the next 1-2 years. Include:
-1. Short-term goals (0-6 months): Skills to learn immediately
-2. Medium-term goals (6-12 months): Certifications and projects
-3. Long-term goals (1-2 years): Career positioning and industry exposure
-4. Recommended learning resources and platforms
-5. Networking and community engagement suggestions
-
-Be specific and actionable. Complete all sections.
-
-Resume:
-{resume_text}""", 
-            max_tokens=1500
-        )
+        roadmap = analyze_roadmap(resume_text)
         results['roadmap'] = roadmap
         yield f"data: {json.dumps({'step': 'roadmap', 'status': 'complete', 'data': roadmap})}\n\n"
         
-        # Step 4: Keywords - JSON format for easier parsing
+        # Step 4: Keywords
         yield f"data: {json.dumps({'step': 'keywords', 'status': 'processing'})}\n\n"
-        keywords_raw = ask_gemini(
-            f"""Based on this resume, suggest the best job search keywords.
-
-CRITICAL: Return ONLY a valid JSON array of strings. No explanation, no markdown, just the JSON array.
-Example format: ["Software Engineer", "Full Stack Developer", "Python Developer", "Machine Learning", "React"]
-
-IMPORTANT: 
-- The FIRST 3-5 items MUST be actual job titles (e.g., "Software Engineer", "Backend Developer")
-- Job titles should be searchable on LinkedIn
-- After job titles, you can include key technologies
-- Avoid overly specific technical jargon that wouldn't be used in job titles
-- Maximum 10-12 keywords total
-
-Resume Summary:
-{summary}""",
-            max_tokens=1000
-        )
-        
-        # Parse JSON keywords
-        try:
-            # Try to extract JSON array from response
-            keywords_raw = keywords_raw.strip()
-            # Remove markdown code blocks if present
-            if keywords_raw.startswith("```"):
-                keywords_raw = keywords_raw.split("```")[1]
-                if keywords_raw.startswith("json"):
-                    keywords_raw = keywords_raw[4:]
-            keywords_raw = keywords_raw.strip()
-            
-            keywords = json.loads(keywords_raw)
-            if not isinstance(keywords, list):
-                keywords = [str(keywords)]
-        except json.JSONDecodeError:
-            # Fallback: split by comma or newline
-            if "," in keywords_raw:
-                keywords = [k.strip().strip('"').strip("'") for k in keywords_raw.split(",") if k.strip()]
-            else:
-                keywords = [k.strip().strip('"').strip("'") for k in keywords_raw.split("\n") if k.strip()]
-        
-        # Clean up keywords
-        keywords = [k for k in keywords if k and len(k) > 2 and not k.startswith("[")]
+        keywords = analyze_keywords(resume_text, summary)
         results['keywords'] = keywords
         yield f"data: {json.dumps({'step': 'keywords', 'status': 'complete', 'data': keywords})}\n\n"
         
