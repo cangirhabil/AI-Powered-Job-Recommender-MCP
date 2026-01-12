@@ -1,6 +1,6 @@
 # AI-Powered Job Recommender
 
-An AI-driven platform that analyzes resumes, identifies skill gaps, and recommends relevant jobs from LinkedIn and Naukri.
+An AI-driven platform that analyzes resumes, identifies skill gaps, and recommends relevant jobs from LinkedIn.
 
 ## 🚀 Built With
 
