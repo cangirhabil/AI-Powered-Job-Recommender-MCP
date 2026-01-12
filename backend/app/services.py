@@ -177,8 +177,13 @@ Example format: ["Software Engineer", "Full Stack Developer", "Python Developer"
 
 IMPORTANT: 
 - The FIRST 3-5 items MUST be actual job titles (e.g., "Software Engineer", "Backend Developer")
+- **PRIORITY ORDERING:** You MUST order these job titles based on the candidate's STRONGEST profile match. 
+  - If the resume is AI-heavy, "AI Engineer" or "Machine Learning Engineer" MUST be first.
+  - If the resume is Full Stack heavy, "Full Stack Developer" MUST be first.
+  - The most relevant and senior-appropriate role should be at the very top.
+  - Be specific: if the user is a Junior, put "Junior..." titles.
 - Job titles should be searchable on LinkedIn
-- After job titles, you can include key technologies
+- After job titles, you can include key technologies (prioritize the most relevant ones)
 - Avoid overly specific technical jargon that wouldn't be used in job titles
 - Maximum 10-12 keywords total
 
